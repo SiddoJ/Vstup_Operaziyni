@@ -1,1 +1,1 @@
-# Vstup_Operaziyni
+index + inventory + plabooka1 = Ansible

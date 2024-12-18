@@ -1,0 +1,45 @@
+---
+- name: Deploy Apache Web Server
+  hosts: webservers
+  become: true  # Для выполнения команд от имени root
+  tasks:
+    - name: Install Apache on Debian-based systems
+      apt:
+        name: apache2
+        state: present
+      when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+    - name: Install Apache on RHEL-based systems
+      yum:
+        name: httpd
+        state: present
+      when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+    - name: Ensure Apache is running
+      service:
+        name: "{{ 'apache2' if ansible_distribution in ['Ubuntu', 'Debian'] else 'httpd' }}"
+        state: started
+        enabled: true
+
+    - name: Deploy index.html
+      copy:
+        src: /home/siddoji/Ansible/index.html
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Open HTTP port in the firewall
+      ufw:
+        rule: allow
+        port: 80
+        proto: tcp
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Open HTTP port in firewalld
+      firewalld:
+        service: http
+        permanent: true
+        state: enabled
+        immediate: yes
+      when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
